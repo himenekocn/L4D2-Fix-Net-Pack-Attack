@@ -62,7 +62,7 @@ public MRESReturn CSteamSocketMgr_recvfrom(DHookReturn hReturn, DHookParam hPara
 {
 	int DataSize = DHookGetReturn(hReturn);
 
-	if (DataSize > 0 && DataSize < 12 && TempAddress != Address_Null)
+	if (DataSize > 0 && TempAddress != Address_Null)
 	{
 		int type = LoadFromAddress(TempAddress, NumberType_Int32);
 
