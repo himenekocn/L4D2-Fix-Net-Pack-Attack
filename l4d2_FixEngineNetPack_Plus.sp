@@ -171,7 +171,8 @@ public MRESReturn:mreUTILRecvfromPost(Handle:hReturn,Handle:hParams)
 		new bool:checkType1 = value > 0 && value < 12;
 		if(type==-2)
 		{
-			new bool:checkType2 = (LoadFromAddress(Address:g_v5+Address:(10 * 4),NumberType_Int32) - 564) > 624;	// 0x270u
+			new size = LoadFromAddress(Address:g_v5+Address:(10 * 4),NumberType_Int32);
+			new bool:checkType2 = (size - 564) > 624 || size<=0;	// 0x270u
 			new bool:checkType3 = (LoadFromAddress(Address:g_v5+Address:(8 * 4),NumberType_Int32) >> 8) > 403;	// 0x193u
 			if(checkType1 || checkType2 || checkType3)
 			{
