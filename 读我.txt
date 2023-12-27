@@ -1,0 +1,9 @@
+修复 Value FEFFFFFF FDFFFFFF 炸服功能
+需要：sourcemod v11 及 dhook 扩展
+支持 windows linux 双平台修复
+使用方式：直接将 smx 丢到 plugins 下即可
+
+未来计划：
+    增加 cfg 选择是否自动自动拦截
+    增加记录利用漏洞攻击的 ip 日志
+    ...
