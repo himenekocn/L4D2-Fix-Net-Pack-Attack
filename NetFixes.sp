@@ -10,9 +10,9 @@ public Plugin myinfo =
 {
 	name		= "[L4D2] Fix Net pack attack",
 	author		= "Neko Channel & 昔洛",
-	description = "Fix SB DOS Attack | 修复小字节网络包服务端攻击",
-	version		= "1.5",
-	url			= "https://github.com/himenekocn/L4D2-Fix-Net-Pack-Attack"
+	description 	= "Fix SB DOS Attack | 修复小字节网络包服务端攻击",
+	version		= "1.6",
+	url		= "https://github.com/himenekocn/L4D2-Fix-Net-Pack-Attack"
 };
 
 public void OnPluginStart()
@@ -60,13 +60,11 @@ public void OnPluginStart()
 
 public MRESReturn CSteamSocketMgr_recvfrom(DHookReturn hReturn, DHookParam hParams)
 {
-	int DataSize = DHookGetReturn(hReturn);
-
-	if (DataSize > 0 && TempAddress != Address_Null)
+	if (TempAddress != Address_Null)
 	{
-		int type = LoadFromAddress(TempAddress, NumberType_Int32);
+		int NetPackType = LoadFromAddress(TempAddress, NumberType_Int32);
 
-		if (type == -2 || type == -3)
+		if (NetPackType == -2 || NetPackType == -3)
 			StoreToAddress(TempAddress, 0, NumberType_Int32);
 	}
 
