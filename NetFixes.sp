@@ -4,19 +4,30 @@
 #include <sourcemod>
 #include <dhooks>
 
-Address TempAddress = Address_Null;
+Address TempAddress, GetAddress;
+
+char IpLog[PLATFORM_MAX_PATH];
+
+ConVar EnableIpLog;
 
 public Plugin myinfo =
 {
-	name		= "[L4D2] Fix Net pack attack",
+	name		= "[L4D2] Fix Net Pack Attack",
 	author		= "Neko Channel & 昔洛",
 	description 	= "Fix SB DOS Attack | 修复小字节网络包服务端攻击",
-	version		= "1.6",
+	version		= "1.7",
 	url		= "https://github.com/himenekocn/L4D2-Fix-Net-Pack-Attack"
 };
 
 public void OnPluginStart()
 {
+	char HostPort[6];
+	GetConVarString(FindConVar("hostport"), HostPort, sizeof(HostPort));
+
+	BuildPath(Path_SM, IpLog, sizeof(IpLog), "logs/NetDosIPLog_S%s.log", HostPort[4]);
+
+	EnableIpLog = CreateConVar("net_enabledosiplog", "0", "1 = Enable ip attack log , 0 = Disable ip attack log", _, true, 0.0, true, 1.0);
+
 	GameData hGameData = new GameData("NetFixes");
 
 	if (hGameData == null)
@@ -60,20 +71,44 @@ public void OnPluginStart()
 
 public MRESReturn CSteamSocketMgr_recvfrom(DHookReturn hReturn, DHookParam hParams)
 {
-	if (TempAddress != Address_Null)
-	{
-		int NetPackType = LoadFromAddress(TempAddress, NumberType_Int32);
+	if (TempAddress == Address_Null)
+		return MRES_Ignored;
 
-		if (NetPackType == -2 || NetPackType == -3)
-			StoreToAddress(TempAddress, 0, NumberType_Int32);
-	}
+	int NetPackType = LoadFromAddress(TempAddress, NumberType_Int32);
+
+	if (NetPackType == -2 || NetPackType == -3)
+		StoreToAddress(TempAddress, 0, NumberType_Int32);
 
 	return MRES_Ignored;
 }
 
 public MRESReturn NET_ReceiveDatagram_Pre(DHookReturn hReturn, DHookParam hParams)
 {
-	TempAddress = LoadFromAddress(DHookGetParam(hParams, 2) + view_as<Address>(24), NumberType_Int32);
+	GetAddress = DHookGetParam(hParams, 2);
+
+	if (TempAddress == Address_Null)
+		return MRES_Ignored;
+	
+	TempAddress = LoadFromAddress(GetAddress + view_as<Address>(24), NumberType_Int32);
+
+	if(!EnableIpLog.BoolValue)
+		return MRES_Ignored;
+
+	int NetPackType = LoadFromAddress(TempAddress, NumberType_Int32);
+
+	if (NetPackType == -2 || NetPackType == -3)
+	{
+		char TempIP[512], TempType[512];
+		Format(TempIP, sizeof TempIP, "%d.%d.%d.%d", view_as<int>(LoadFromAddress(GetAddress + view_as<Address>(4), NumberType_Int8)), view_as<int>(LoadFromAddress(GetAddress + view_as<Address>(5), NumberType_Int8)), view_as<int>(LoadFromAddress(GetAddress + view_as<Address>(6), NumberType_Int8)), view_as<int>(LoadFromAddress(GetAddress + view_as<Address>(7), NumberType_Int8)));
+
+		switch (NetPackType)
+		{
+			case -2: Format(TempType, sizeof TempType, "FEFF");
+			case -3: Format(TempType, sizeof TempType, "FDFF");
+		}
+
+		LogToFile(IpLog, "[NET] 收到来自 %s 的 %s 攻击", TempIP, TempType);
+	}
 
 	return MRES_Ignored;
 }
