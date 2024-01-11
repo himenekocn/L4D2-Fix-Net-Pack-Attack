@@ -22,6 +22,12 @@
 				"windows"	"\x55\x8B\xEC\x81\xEC\x2A\x2A\x2A\x2A\xA1\x2A\x2A\x2A\x2A\x33\xC5\x89\x45\x2A\x8B\x45\x2A\x53\x56\x8B\x75\x2A\x57\x6A"
 				/* 55 8B EC 81 EC ? ? ? ? A1 ? ? ? ? 33 C5 89 45 ? 8B 45 ? 53 56 8B 75 ? 57 6A */
 			}
+			"NET_QueuePacket"
+			{
+				"library"	"engine"
+           		"windows"	"\x55\x8B\xEC\x83\xEC\x0C\x53\x8B\x5D\x0C\x8B\x43\x40"
+				"linux"		"\x55\x89\xE5\x57\x56\x53\x83\xEC\x4C\x8B\x5D\x0C\x8B\x43\x40"
+			}
 		}
 		"Offsets"
 		{
@@ -48,6 +54,13 @@
         }
       	"Functions"
 		{
+			"NET_QueuePacket"
+			{
+				"signature" "NET_QueuePacket"
+				"callconv" "thiscall"
+				"return" "bool"
+				"this" "ignore"
+			}
 			"NET_ReceiveDatagram"
 			{
 				"signature"	"NET_ReceiveDatagram::netpacket_s"

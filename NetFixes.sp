@@ -8,6 +8,8 @@ Address TempAddress, GetAddress;
 
 char IpLog[PLATFORM_MAX_PATH];
 
+float LogCheck;
+
 ConVar EnableIpLog;
 
 public Plugin myinfo =
@@ -15,7 +17,7 @@ public Plugin myinfo =
 	name		= "[L4D2] Fix Net Pack Attack",
 	author		= "Neko Channel & 昔洛",
 	description 	= "Fix SB DOS Attack | 修复小字节网络包服务端攻击",
-	version		= "1.7",
+	version		= "1.8",
 	url		= "https://github.com/himenekocn/L4D2-Fix-Net-Pack-Attack"
 };
 
@@ -36,6 +38,11 @@ public void OnPluginStart()
 	DynamicDetour hNET_ReceiveDatagramDetour = DynamicDetour.FromConf(hGameData, "NET_ReceiveDatagram");
 	if (!hNET_ReceiveDatagramDetour.Enable(Hook_Pre, NET_ReceiveDatagram_Pre))
 		SetFailState("Failed to setup detour for NET_ReceiveDatagram_Pre");
+	
+	// NET_QueuePacket Detour (Fix SB DOS) 其他游戏请自行寻签名
+	DynamicDetour hNET_QueuePacketDetour = DynamicDetour.FromConf(hGameData, "NET_QueuePacket");
+	if (!hNET_QueuePacketDetour.Enable(Hook_Pre, NET_QueuePacket))
+		SetFailState("Failed to setup detour for NET_QueuePacket");
 
 	if (hGameData.GetOffset("OS"))
 	{
@@ -69,6 +76,12 @@ public void OnPluginStart()
 	delete hGameData;
 }
 
+public MRESReturn NET_QueuePacket(DHookReturn hReturn, DHookParam hParams)
+{
+	hReturn.Value = true;
+	return MRES_Supercede;
+}
+
 public MRESReturn CSteamSocketMgr_recvfrom(DHookReturn hReturn, DHookParam hParams)
 {
 	if (TempAddress == Address_Null)
@@ -96,7 +109,7 @@ public MRESReturn NET_ReceiveDatagram_Pre(DHookReturn hReturn, DHookParam hParam
 
 	int NetPackType = LoadFromAddress(TempAddress, NumberType_Int32);
 
-	if (NetPackType == -2 || NetPackType == -3)
+	if ((NetPackType == -2 || NetPackType == -3) && LogCheck + 5 < GetGameTime())
 	{
 		char TempIP[512], TempType[512];
 		Format(TempIP, sizeof TempIP, "%d.%d.%d.%d", view_as<int>(LoadFromAddress(GetAddress + view_as<Address>(4), NumberType_Int8)), view_as<int>(LoadFromAddress(GetAddress + view_as<Address>(5), NumberType_Int8)), view_as<int>(LoadFromAddress(GetAddress + view_as<Address>(6), NumberType_Int8)), view_as<int>(LoadFromAddress(GetAddress + view_as<Address>(7), NumberType_Int8)));
@@ -108,6 +121,8 @@ public MRESReturn NET_ReceiveDatagram_Pre(DHookReturn hReturn, DHookParam hParam
 		}
 
 		LogToFile(IpLog, "[NET] 收到来自 %s 的 %s 攻击", TempIP, TempType);
+
+		LogCheck = GetGameTime();
 	}
 
 	return MRES_Ignored;
